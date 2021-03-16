@@ -1,20 +1,23 @@
 const db = require('../models');
 const fs = require('fs');
-const { comments } = require('../models');
-const usersLiked = require('../models/usersLiked');
 
 exports.getAllPosts = (req, res, next) => {
     db.posts.findAll({
         include: [
             {
                 model: db.users,
-                as: 'users',
+                as: 'user',
+                //attributes: ['id'],
+            },
+            {
+                model: db.users,
+                as: 'likedUsers',
                 attributes: ['id'],
             },
             {
                 model: db.comments,
                 as: 'comments',
-                attributes: ['id', 'user_id', 'text'],
+                attributes: ['id', 'user_id', 'text', 'postId'],
             }
         ]
     })

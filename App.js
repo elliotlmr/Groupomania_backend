@@ -10,6 +10,7 @@ const commentsRoutes = require('./routes/comments');
 
 const db = require("./models");
 db.sequelize.sync();
+//db.sequelize.sync({force: true});
 
 
 //db.users.findAll().then(result => console.log('result', result));
