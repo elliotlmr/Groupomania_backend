@@ -41,10 +41,25 @@ exports.login = (req, res, next) => {
                     {expiresIn: '2h'}
                 ),
                 author: user.firstname + ' ' + user.lastname,
-                role: user.user_role
+                role: user.user_role,
+                profile_picture: user.profile_picture,
             });
         })
         .catch(error => res.status(500).json({error}));
     })
     .catch(error => res.status(500).json({error}));
+};
+
+exports.modifyUser = (req, res, next) => {
+    db.users.findOne({ where: {id: req.user.id} })
+    .then(user => {
+        user.update({
+            company_role: req.body.company_role,
+            profile_picture: req.body.profile_picture,
+        }, { 
+            where: {id: req.user.id} 
+        });
+        user.save({ where: {id: req.user.id} });
+    })
+    .catch(error => res.status(400).json({ error }));
 };

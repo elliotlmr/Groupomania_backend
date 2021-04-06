@@ -6,14 +6,15 @@ module.exports = (sequelize, Sequelize) => {
         },
         mediaUrl: {
             type: Sequelize.STRING,
-            allowNull: true
+            allowNull: true,
+            defaultValue: null,
         },
         likes: {
             type: Sequelize.INTEGER,
             allowNull: false,
             defaultValue: 0
         }
-    }, {timestamps: false});
+    });
 
     return Post;
 };

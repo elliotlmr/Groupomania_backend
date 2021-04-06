@@ -32,6 +32,7 @@ db.users.belongsToMany(db.posts, {through: 'usersLiked', as: 'likedPosts'});
 db.posts.belongsToMany(db.users, {through: 'usersLiked', as: 'likedUsers'});
 
 db.posts.hasMany(db.comments, { as: 'comments' });
+db.users.hasMany(db.comments, {as: 'comments' });
 db.comments.belongsTo(db.posts, { foreignKey: 'postId', as: 'post' });
 db.comments.belongsTo(db.users, {foreignKey: 'userId', as: 'user' });
 

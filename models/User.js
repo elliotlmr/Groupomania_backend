@@ -21,6 +21,10 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING,
             allowNull: false
         },
+        profile_picture: {
+            type: Sequelize.STRING,
+            defaultValue: `http://localhost:1331/medias/default_picture.jpg`
+        },
         user_role: {
             type: Sequelize.STRING,
             allowNull: false,
