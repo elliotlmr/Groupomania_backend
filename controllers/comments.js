@@ -13,7 +13,7 @@ exports.getAllComments = (req, res, next) => {
             {
                 model: db.users,
                 as: 'user',
-                attributes: ['id'],
+                attributes: ['id', 'firstname', 'lastname'],
             }
         ]
      })
@@ -23,7 +23,7 @@ exports.getAllComments = (req, res, next) => {
 
 exports.createComment = (req, res, next) => {
     db.comments.create({
-        user_id: req.user.id,
+        userId: req.user.id,
         text: req.body.comment_text,
         postId: req.params.id
     })
@@ -40,8 +40,8 @@ exports.modifyComment = (req, res, next) => {
             where: {id: req.params.commentId} 
         });
         comment.save({ where: {id: req.params.commentId} });
+        res.status(200).json(comment);
     })
-    .then(() => res.status(200).json({ message: 'Commentaire modifié !' }))
     .catch(error => res.status(400).json({ error }));
 };
 

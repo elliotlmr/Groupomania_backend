@@ -7,11 +7,11 @@ const multer = require('../middlewares/multer-config');
 
 router.get('/', auth, postCtrl.getAllPosts); //Affiche tous les posts.
 //router.get('/search', auth, postCtrl.getSomePosts); //Affiche les posts créés par un utilisateur spécifique.
-router.get('/:id', auth, postCtrl.getOnePost); //Affiche un post en fonction de l'id de la req.
+router.get('/last', auth, postCtrl.getYourLastPost);//Affiche le dernier post de l'utilisateur.
 
 router.get('/mostLiked', auth, postCtrl.getMostLikedPost);//Affiche le post le plus 'liked'.
 
-router.get('/yourLast', auth, postCtrl.getYourLastPost);//Affiche le dernier post de l'utilisateur.
+router.get('/:id', auth, postCtrl.getOnePost); //Affiche un post en fonction de l'id de la req.
 
 router.post('/', auth, multer, postCtrl.createPost); //Crée un nouveau post.
 

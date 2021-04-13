@@ -1,5 +1,6 @@
 const db = require("../models");
 const fs = require("fs");
+const { posts } = require("../models");
 
 exports.getAllPosts = (req, res, next) => {
   db.posts
@@ -8,7 +9,13 @@ exports.getAllPosts = (req, res, next) => {
         {
           model: db.users,
           as: "user",
-          //attributes: ['id'],
+          attributes: [
+            "id",
+            "firstname",
+            "lastname",
+            "profile_picture",
+            "company_role",
+          ],
         },
         {
           model: db.users,
@@ -19,14 +26,16 @@ exports.getAllPosts = (req, res, next) => {
           model: db.comments,
           as: "comments",
           attributes: ["id", "userId", "text", "postId"],
-          include: [{model: db.users, as: 'user'}]
+          include: [{ model: db.users, as: "user" }],
         },
       ],
       order: [["createdAt", "DESC"]],
     })
     .then((posts) => res.status(200).json(posts))
-    .catch((error) => {console.log(error); 
-        res.status(400).json({ error })});
+    .catch((error) => {
+      console.log(error);
+      res.status(400).json({ error });
+    });
 };
 
 exports.getOnePost = (req, res, next) => {
@@ -36,13 +45,14 @@ exports.getOnePost = (req, res, next) => {
       include: [
         {
           model: db.users,
-          as: "users",
+          as: "user",
           attributes: ["id"],
         },
         {
           model: db.comments,
           as: "comments",
-          attributes: ["id", "user_id", "text"],
+          attributes: ["id", "userId", "text"],
+          include: [{ model: db.users, as: "user" }],
         },
       ],
     })
@@ -51,12 +61,23 @@ exports.getOnePost = (req, res, next) => {
 };
 
 exports.getYourLastPost = (req, res, next) => {
+  console.log("test", req.user.id);
   db.posts
     .findAll({
+      where: {
+        userId: req.user.id,
+      },
       include: [
         {
           model: db.users,
           as: "user",
+          attributes: [
+            "id",
+            "firstname",
+            "lastname",
+            "profile_picture",
+            "company_role",
+          ],
         },
         {
           model: db.users,
@@ -66,12 +87,10 @@ exports.getYourLastPost = (req, res, next) => {
         {
           model: db.comments,
           as: "comments",
-          attributes: ["id", "user_id", "text", "postId"],
+          attributes: ["id", "userId", "text", "postId"],
+          include: [{ model: db.users, as: "user" }],
         },
       ],
-      where: {
-        userId: req.user.id,
-      },
       order: [["createdAt", "DESC"]],
       limit: 1,
     })
@@ -86,6 +105,13 @@ exports.getMostLikedPost = (req, res, next) => {
         {
           model: db.users,
           as: "user",
+          attributes: [
+            "id",
+            "firstname",
+            "lastname",
+            "profile_picture",
+            "company_role",
+          ],
         },
         {
           model: db.users,
@@ -95,10 +121,11 @@ exports.getMostLikedPost = (req, res, next) => {
         {
           model: db.comments,
           as: "comments",
-          attributes: ["id", "user_id", "text", "postId"],
+          attributes: ["id", "userId", "text", "postId"],
+          include: [{ model: db.users, as: "user" }],
         },
       ],
-      order: [["likes"]],
+      order: [["likes", "DESC"]],
       limit: 1,
     })
     .then((post) => res.status(200).json(post))
@@ -133,26 +160,51 @@ exports.createPost = (req, res, next) => {
             description: req.body.description,
           }
     )
-    .then(() => res.status(201).json({ message: "Post créé !" }))
+    .then((post) => {
+      //res.status(201).json(post);
+      db.posts
+        .findOne({
+          where: { id: post.id },
+          include: [
+            {
+              model: db.users,
+              as: "user",
+            },
+            {
+              model: db.users,
+              as: "likedUsers",
+              attributes: ["id"],
+            },
+            {
+              model: db.comments,
+              as: "comments",
+              attributes: ["id", "userId", "text", "postId"],
+              include: [{ model: db.users, as: "user" }],
+            },
+          ],
+        })
+        .then(() => res.status(201).json("Post créé !"));
+    })
     .catch((error) => res.status(400).json({ error }));
 };
 
 exports.modifyPost = (req, res, next) => {
-  const postObject = req.file
-    ? {
-        author: req.params.author,
-        description: req.body.description,
-        mediaUrl: `${req.protocol}://${req.get("host")}/medias/${
-          req.file.filename
-        }`,
-      }
-    : {
-        ...req.body,
-      };
   db.posts
-    .update(req.body, { ...postObject, where: { id: req.params.id } })
-    //.then(post => post.save())
-    .then(() => res.status(200).json({ message: "Post modifié !" }))
+    .findOne({
+      where: { id: req.params.id },
+    })
+    .then((post) => {
+      post.update(
+        {
+          description: req.body.description,
+        },
+        {
+          where: { id: req.params.id },
+        }
+      );
+      post.save({ where: { id: req.params.id } });
+      res.status(200).json(post);
+    })
     .catch((error) => res.status(400).json({ error }));
 };
 
@@ -164,7 +216,7 @@ exports.deletePost = (req, res, next) => {
         {
           model: db.comments,
           as: "comments",
-          attributes: ["id", "user_id", "text"],
+          attributes: ["id", "userId", "text"],
         },
       ],
     })
@@ -188,66 +240,64 @@ exports.deletePost = (req, res, next) => {
 };
 
 exports.updateLikes = (req, res, next) => {
-  const like = req.body.likes;
-  const userId = req.user.id;
-  const postId = req.params.id;
-
   db.posts
     .findOne({
-      where: { id: postId },
+      where: { id: req.params.id },
       include: [
         {
           model: db.users,
-          as: "users",
+          as: "user",
+          attributes: ["id"],
+        },
+        {
+          model: db.users,
+          as: "likedUsers",
           attributes: ["id"],
         },
       ],
     })
     .then((post) => {
-      db.usersLiked
-        .findAll({ where: { post_id: postId } })
-        .then((verifyLike) => {
-          if (like == 1 && userId != verifyLike.user_id) {
-            post.likes += 1;
-            db.usersLiked
-              .create({
-                user_id: userId,
-                post_id: postId,
-              })
-              .catch((error) => console.log(error));
-          } else {
-            post.likes -= 1;
-            db.usersLiked
-              .destroy({
-                where: {
-                  user_id: userId,
-                  post_id: postId,
-                },
-              })
-              .catch((error) => console.log(error));
+      if (req.body.likes == 1) {
+        post.update(
+          {
+            likes: (post.likes += 1),
+            likedUsers: [{id: req.user.id}],
+          },
+          {
+            where: { id: req.params.id },
+          },
+          {include: [
+            {
+              model: db.users,
+              as: "user",
+              attributes: ["id"],
+            },
+            {
+              model: db.users,
+              as: "likedUsers",
+              attributes: ["id"],
+            },
+          ]}
+        );
+        post.save({ where: { id: req.params.id } });
+      }
+      if (req.body.likes == 0) {
+        let index = post.likedUsers.indexOf(req.user.id);
+        post.update(
+          {
+            likes: (post.likes -= 1),
+            likedUsers: post.likedUsers.splice(index, 1),
+          },
+          {
+            where: { id: req.params.id },
           }
-        });
-      /*if (like == 1 &&  !== userId) {
-                db.usersLiked.create({
-                    user_id: userId,
-                    post_id: postId
-                })
-                .catch(error => console.log(error));
-                post.likes += 1;
-            } else {
-                post.likes -= 1;
-                db.usersLiked.destroy({
-                    where: {
-                        user_id: userId,
-                        post_id: postId
-                    }
-                })
-                .catch(error => console.log(error));
-            };*/
-      post
-        .save()
-        .then(() => res.status(200).json({ message: "Post liked/unliked !" }))
-        .catch((error) => console.log(error));
+        );
+        post.save({ where: { id: req.params.id } });
+      }
+      res.status(200).json(post);
     })
-    .catch((error) => res.status(400).json({ error }));
+    .catch((error) => {
+      console.log(error);
+      res.status(400).json({ error });
+    });
 };
