@@ -25,7 +25,9 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(bodyParser.json());
+app.use(express.json());
+//app.use(bodyParser.json());
+//app.use(FormData.json());
 
 app.use('/medias', express.static(path.join(__dirname, 'medias')));
 

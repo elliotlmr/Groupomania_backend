@@ -161,7 +161,6 @@ exports.createPost = (req, res, next) => {
           }
     )
     .then((post) => {
-      //res.status(201).json(post);
       db.posts
         .findOne({
           where: { id: post.id },
@@ -169,6 +168,7 @@ exports.createPost = (req, res, next) => {
             {
               model: db.users,
               as: "user",
+              attributes: ['id', 'firstname', 'lastname']
             },
             {
               model: db.users,
@@ -183,7 +183,7 @@ exports.createPost = (req, res, next) => {
             },
           ],
         })
-        .then(() => res.status(201).json("Post créé !"));
+        .then(post => res.status(201).json(post));
     })
     .catch((error) => res.status(400).json({ error }));
 };
