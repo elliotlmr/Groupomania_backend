@@ -1,6 +1,5 @@
 const db = require("../models");
 const fs = require("fs");
-const { posts } = require("../models");
 
 exports.getAllPosts = (req, res, next) => {
   db.posts
@@ -168,7 +167,7 @@ exports.createPost = (req, res, next) => {
             {
               model: db.users,
               as: "user",
-              attributes: ['id', 'firstname', 'lastname']
+              attributes: ["id", "firstname", "lastname"],
             },
             {
               model: db.users,
@@ -183,7 +182,7 @@ exports.createPost = (req, res, next) => {
             },
           ],
         })
-        .then(post => res.status(201).json(post));
+        .then((post) => res.status(201).json(post));
     })
     .catch((error) => res.status(400).json({ error }));
 };
@@ -216,11 +215,12 @@ exports.deletePost = (req, res, next) => {
         {
           model: db.comments,
           as: "comments",
-          attributes: ["id", "userId", "text"],
+          attributes: ["id", "userId", "text", "postId"],
         },
       ],
     })
     .then((post) => {
+      db.comments.destroy({ where: { postId: post.id } });
       if (post.mediaUrl == null) {
         post
           .destroy({ where: { id: req.params.id } })
@@ -261,23 +261,25 @@ exports.updateLikes = (req, res, next) => {
         post.update(
           {
             likes: (post.likes += 1),
-            likedUsers: [{id: req.user.id}],
+            likedUsers: [{ id: req.user.id }],
           },
           {
             where: { id: req.params.id },
           },
-          {include: [
-            {
-              model: db.users,
-              as: "user",
-              attributes: ["id"],
-            },
-            {
-              model: db.users,
-              as: "likedUsers",
-              attributes: ["id"],
-            },
-          ]}
+          {
+            include: [
+              {
+                model: db.users,
+                as: "user",
+                attributes: ["id"],
+              },
+              {
+                model: db.users,
+                as: "likedUsers",
+                attributes: ["id"],
+              },
+            ],
+          }
         );
         post.save({ where: { id: req.params.id } });
       }

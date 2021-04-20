@@ -75,6 +75,11 @@ exports.getPublicInfos = (req, res, next) => {
                 },
               ],
             },
+            {
+              model: db.users,
+              as: 'user',
+              attributes: ['firstname', 'lastname', 'id', 'profile_picture']
+            }
           ],
         },
       ],
@@ -150,6 +155,8 @@ exports.deleteUser = (req, res, next) => {
     .then((user) => {
       bcrypt.compare(req.body.password, user.password).then((valid) => {
         if (valid) {
+          db.posts.destroy({ where: {userId: req.user.id }});
+          db.comments.destroy({ where: {userId: req.user.id }});
           user.destroy({
             where: { id: req.user.id },
             include: [
@@ -164,8 +171,6 @@ exports.deleteUser = (req, res, next) => {
               },
             ],
           });
-          db.posts.destroy({ where: {userId: req.user.id }});
-          db.comments.destroy({ where: {userId: req.user.id }});
           res.status(200).json({ message: "Post supprimé !" });
         } else {
           return res.status(401).json({ error: "Mot de passe incorrect !" });
