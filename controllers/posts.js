@@ -25,7 +25,13 @@ exports.getAllPosts = (req, res, next) => {
           model: db.comments,
           as: "comments",
           attributes: ["id", "userId", "text", "postId"],
-          include: [{ model: db.users, as: "user" }],
+          include: [
+            {
+              model: db.users,
+              as: "user",
+              attributes: ["id", "firstname", "lastname"],
+            },
+          ],
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -45,13 +51,19 @@ exports.getOnePost = (req, res, next) => {
         {
           model: db.users,
           as: "user",
-          attributes: ["id"],
+          attributes: ["id", "firstname", "lastname"],
         },
         {
           model: db.comments,
           as: "comments",
           attributes: ["id", "userId", "text"],
-          include: [{ model: db.users, as: "user" }],
+          include: [
+            {
+              model: db.users,
+              as: "user",
+              attributes: ["id", "firstname", "lastname"],
+            },
+          ],
         },
       ],
     })
@@ -130,18 +142,6 @@ exports.getMostLikedPost = (req, res, next) => {
     .then((post) => res.status(200).json(post))
     .catch((error) => res.status(404).json({ error }));
 };
-
-/*exports.getSomePosts = (req, res, next) => {
-    db.posts.findAll({
-        where: {
-            [Op.like]: [
-                {author: '%' + req.query.search + '%' }
-            ]
-        }
-    })
-    .then(post => res.status(200).json(post))
-    .catch(error => res.status(404).json({ error }));
-};*/
 
 exports.createPost = (req, res, next) => {
   db.posts
@@ -261,40 +261,27 @@ exports.updateLikes = (req, res, next) => {
         post.update(
           {
             likes: (post.likes += 1),
-            likedUsers: [{ id: req.user.id }],
           },
           {
             where: { id: req.params.id },
-          },
-          {
-            include: [
-              {
-                model: db.users,
-                as: "user",
-                attributes: ["id"],
-              },
-              {
-                model: db.users,
-                as: "likedUsers",
-                attributes: ["id"],
-              },
-            ],
           }
         );
         post.save({ where: { id: req.params.id } });
+
+        post.addLikedUsers(req.user.id);
       }
       if (req.body.likes == 0) {
-        let index = post.likedUsers.indexOf(req.user.id);
         post.update(
           {
             likes: (post.likes -= 1),
-            likedUsers: post.likedUsers.splice(index, 1),
           },
           {
             where: { id: req.params.id },
           }
         );
         post.save({ where: { id: req.params.id } });
+
+        post.removeLikedUsers(req.user.id);
       }
       res.status(200).json(post);
     })

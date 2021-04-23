@@ -77,9 +77,9 @@ exports.getPublicInfos = (req, res, next) => {
             },
             {
               model: db.users,
-              as: 'user',
-              attributes: ['firstname', 'lastname', 'id', 'profile_picture']
-            }
+              as: "user",
+              attributes: ["firstname", "lastname", "id", "profile_picture"],
+            },
           ],
         },
       ],
@@ -113,19 +113,30 @@ exports.getPrivateInfos = (req, res, next) => {
 
 exports.modifyUser = (req, res, next) => {
   db.users
-    .findOne({ where: { id: req.user.id } })
+    .findOne({
+      where: { id: req.user.id },
+      attributes: [
+        "firstname",
+        "lastname",
+        "email",
+        "id",
+        "profile_picture",
+        "user_role",
+        "company_role",
+      ],
+    })
     .then((user) => {
       user.update(
         req.file
-        ? {
-          company_role: req.body.company_role,
-          profile_picture: `${req.protocol}://${req.get("host")}/medias/${
-            req.file.filename
-          }`,
-        }
-        : {
-          company_role: req.body.company_role,
-        },
+          ? {
+              company_role: req.body.company_role,
+              profile_picture: `${req.protocol}://${req.get("host")}/medias/${
+                req.file.filename
+              }`,
+            }
+          : {
+              company_role: req.body.company_role,
+            },
         {
           where: { id: req.user.id },
         }
@@ -155,8 +166,8 @@ exports.deleteUser = (req, res, next) => {
     .then((user) => {
       bcrypt.compare(req.body.password, user.password).then((valid) => {
         if (valid) {
-          db.posts.destroy({ where: {userId: req.user.id }});
-          db.comments.destroy({ where: {userId: req.user.id }});
+          db.posts.destroy({ where: { userId: req.user.id } });
+          db.comments.destroy({ where: { userId: req.user.id } });
           user.destroy({
             where: { id: req.user.id },
             include: [

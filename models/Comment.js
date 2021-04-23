@@ -1,12 +1,10 @@
-const { sequelize } = require(".");
-
 module.exports = (sequelize, Sequelize) => {
-    const Comment = sequelize.define('comment', {
-        text: {
-            type: Sequelize.TEXT,
-            allowNull: false
-        }
-    });
+  const Comment = sequelize.define("comment", {
+    text: {
+      type: Sequelize.TEXT,
+      allowNull: false,
+    },
+  });
 
-    return Comment;
+  return Comment;
 };
