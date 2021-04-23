@@ -80,6 +80,11 @@ exports.getPublicInfos = (req, res, next) => {
               as: "user",
               attributes: ["firstname", "lastname", "id", "profile_picture"],
             },
+            {
+              model: db.users,
+              as: "likedUsers",
+              attributes: ["id"],
+            },
           ],
         },
       ],
