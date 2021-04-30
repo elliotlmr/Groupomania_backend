@@ -20,3 +20,4 @@ DB_PASSWORD='*password*'
 ##Si vous souhaitez accédez à une copie de la base de données présentée lors de la soutenance, un fichier gpmania.sql est disponible dans le dossier 'backend'.  
   
 -> Importez la base de données MySQL depuis phpMyAdmin (outil "Importer", choisir le fichier gpmania.sql, clicker sur "Exécuter").  
+-> Utilisez l'application XXAMP afin d'héberger localement votre server Apache et votre base de données MySQL.
