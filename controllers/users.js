@@ -1,27 +1,58 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+//Email and password controls :
+
+const emailValidator = require("email-validator");
+const passwordValidator = require("password-validator");
+
+let schema = new passwordValidator();
+
+schema
+  .is()
+  .min(8)
+  .is()
+  .max(30)
+  .has()
+  .uppercase()
+  .has()
+  .lowercase()
+  .has()
+  .digits(1)
+  .has()
+  .not()
+  .spaces();
+
+//Controllers
+
 const db = require("../models");
 
 exports.signup = (req, res, next) => {
+  if (
+    emailValidator.validate(req.body.email) == true &&
+    schema.validate(req.body.password) == true
+  ) {
   bcrypt
     .hash(req.body.password, 12)
     .then((hash) => {
-      db.users
-        .create({
-          email: req.body.email,
-          password: hash,
-          firstname: req.body.firstname,
-          lastname: req.body.lastname,
-          company_role: req.body.company_role,
-        })
-        .then(() => res.status(201).json({ message: "Utilisateur créé !" }))
-        .catch((error) => res.status(400).json({ error }));
+        db.users
+          .create({
+            email: req.body.email,
+            password: hash,
+            firstname: req.body.firstname,
+            lastname: req.body.lastname,
+            company_role: req.body.company_role,
+          })
+          .then(() => res.status(201).json({ message: "Utilisateur créé !" }))
+          .catch((error) => res.status(400).json({ error }));
     })
     .catch((error) => {
       console.log(error);
       return res.status(500).json({ error });
     });
+  } else {
+    return res.status(500).json({ message: 'Email ou mot de passe non valide !'})
+  }
 };
 
 exports.login = (req, res, next) => {
